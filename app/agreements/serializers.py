@@ -60,3 +60,10 @@ class AgreementSerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = ("id", "created_at")
+
+class AttachmentUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    def validate_file(self, value):
+        # Add any custom validation logic for the uploaded file here
+        return value
