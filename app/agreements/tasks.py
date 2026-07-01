@@ -1,6 +1,7 @@
 import time 
 
 from celery import shared_task
+from django.conf import settings
 from django.db import transaction
 
 from .models import MissingDocument
@@ -22,7 +23,8 @@ def process_missing_document(missing_document_id: int) -> None:
             missing_document.status = MissingDocument.Status.PROCESSING
             missing_document.save(update_fields=['status'])
 
-        time.sleep(5)  # Simulate a delay for processing
+        if not getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+            time.sleep(3)
 
         with transaction.atomic():
             # Re-fetch the missing document to ensure it's still in PROCESSING state
