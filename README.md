@@ -32,6 +32,7 @@ pending → uploaded → processing → processed
 - PostgreSQL
 - Celery
 - RabbitMQ
+- Docker
 - Docker Compose
 - Pytest
 - pytest-django
@@ -242,22 +243,15 @@ git clone <repository-url>
 cd internal-document-workflow-api
 ```
 
-### 2. Create and activate virtual environment
+### 2. Create `.env`
+
+Copy the example environment file:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+cp .env.example .env
 ```
 
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Create `.env`
-
-Create a `.env` file in the project root:
+Update the values if needed.
 
 ```env
 DJANGO_SECRET_KEY=change-me
@@ -266,24 +260,25 @@ DJANGO_DEBUG=True
 POSTGRES_DB=documents_db
 POSTGRES_USER=documents_user
 POSTGRES_PASSWORD=documents_password
-POSTGRES_HOST=localhost
+POSTGRES_HOST=db
 POSTGRES_PORT=5432
 
-CELERY_BROKER_URL=amqp://guest:guest@localhost:5672//
+CELERY_BROKER_URL=amqp://rabbitmq_user:rabbitmq_password@rabbitmq:5672//
 CELERY_RESULT_BACKEND=rpc://
 ```
 
-### 5. Start infrastructure
+### 3. Start infrastructure
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
 This starts:
-
+- Django API on port `8000`;
 - PostgreSQL on port `5432`;
 - RabbitMQ on port `5672`;
 - RabbitMQ Management UI on port `15672`.
+- Celery Worker.
 
 RabbitMQ Management UI:
 
@@ -294,26 +289,19 @@ http://localhost:15672
 Default credentials:
 
 ```text
-guest / guest
+rabbitmq_user / rabbitmq_password
 ```
 
-### 6. Run migrations
+### 4. Run migrations
 
 ```bash
-cd app
-python manage.py migrate
+docker compose exec web python app/manage.py migrate
 ```
 
-### 7. Create superuser
+### 5. Create superuser
 
 ```bash
-python manage.py createsuperuser
-```
-
-### 8. Start Django development server
-
-```bash
-python manage.py runserver
+docker compose exec web python manage.py createsuperuser
 ```
 
 Django API will be available at:
@@ -328,41 +316,18 @@ Admin panel:
 http://127.0.0.1:8000/admin/
 ```
 
-### 9. Start Celery worker
-
-Open a separate terminal:
-
-```bash
-cd app
-source ../.venv/bin/activate
-celery -A config worker -l info
-```
-
-The worker should discover the task:
-
-```text
-agreements.tasks.process_missing_document
-```
-
 ## Running Tests
 
-Make sure PostgreSQL is running:
+Start the application:
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-Then run tests from the `app` directory:
+Then run the tests:
 
 ```bash
-cd app
-pytest
-```
-
-Expected result:
-
-```text
-4 passed
+docker compose exec web pytest
 ```
 
 The tests cover:
