@@ -274,6 +274,7 @@ docker compose up --build
 ```
 
 This starts:
+
 - Django API on port `8000`;
 - PostgreSQL on port `5432`;
 - RabbitMQ on port `5672`;
@@ -295,7 +296,7 @@ rabbitmq_user / rabbitmq_password
 ### 4. Run migrations
 
 ```bash
-docker compose exec web python app/manage.py migrate
+docker compose exec web python manage.py migrate
 ```
 
 ### 5. Create superuser

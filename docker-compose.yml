@@ -10,7 +10,8 @@ services:
       - db
       - rabbitmq
     volumes:
-      - ./app:/app
+      - ./app:/app/app
+      - ./pytest.ini:/app/app/pytest.ini:ro
   db:
     image: postgres:16
     container_name: document-workflow-db
@@ -31,18 +32,18 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    
+
   worker:
-      build: .
-      working_dir:  /app/app
-      command: celery -A config worker --loglevel=info
-      env_file:
-        - .env
-      depends_on:
-        - db
-        - rabbitmq
-      volumes:
-        - .:/app
+    build:
+      context: .
+    command: celery -A config worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - rabbitmq
+    volumes:
+      - ./app:/app/app
 
 volumes:
   postgres_data:
