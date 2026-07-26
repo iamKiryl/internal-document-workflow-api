@@ -7,8 +7,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_started
     volumes:
       - ./app:/app/app
       - ./pytest.ini:/app/app/pytest.ini:ro
@@ -26,6 +28,12 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: document-workflow-rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     environment:
       RABBITMQ_DEFAULT_USER: rabbitmq_user
       RABBITMQ_DEFAULT_PASS: rabbitmq_password
@@ -40,8 +48,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_started
     volumes:
       - ./app:/app/app
 
