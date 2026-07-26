@@ -1,4 +1,17 @@
 services:
+  web:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./pytest.ini:/app/app/pytest.ini:ro
   db:
     image: postgres:16
     container_name: document-workflow-db
@@ -6,6 +19,13 @@ services:
       POSTGRES_DB: documents_db
       POSTGRES_USER: documents_user
       POSTGRES_PASSWORD: documents_password
+    healthcheck:
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
       - "5432:5432"
     volumes:
@@ -13,12 +33,32 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: document-workflow-rabbitmq
-    # environment:
-    #   RABBITMQ_DEFAULT_USER: rabbitmq_user
-    #   RABBITMQ_DEFAULT_PASS: rabbitmq_password
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq_user
+      RABBITMQ_DEFAULT_PASS: rabbitmq_password
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  worker:
+    build:
+      context: .
+    command: celery -A config worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
 
 volumes:
   postgres_data:
