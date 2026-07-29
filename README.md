@@ -1,5 +1,7 @@
 # Internal Document Workflow API
 
+[![CI](https://github.com/iamKiryl/internal-document-workflow-api/actions/workflows/ci.yml/badge.svg)](https://github.com/iamKiryl/internal-document-workflow-api/actions/workflows/ci.yml)
+
 A production-like backend API for managing agreement-related missing documents, file uploads and asynchronous document processing workflows.
 
 The project is inspired by internal business systems where agreements may have missing required documents, users upload attachments, and the backend processes them asynchronously through a status-based workflow.
